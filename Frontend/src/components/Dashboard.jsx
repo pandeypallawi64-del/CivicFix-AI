@@ -21,7 +21,7 @@ function Dashboard() {
       console.log("New status:", newStatus);
 
       const response = await fetch(
-        "http://localhost:5000/api/reports/update-status",
+        "https://civicfix-ai-backend-xcjg.onrender.com/api/reports/update-status",
         {
           method: "POST",
           headers: {
@@ -85,7 +85,7 @@ function Dashboard() {
   // ===============================
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/reports")
+    fetch("https://civicfix-ai-backend-xcjg.onrender.com/api/reports")
       .then((response) => response.json())
       .then((data) => {
         setReports(data);
