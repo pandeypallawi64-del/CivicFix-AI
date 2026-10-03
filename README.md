@@ -58,7 +58,13 @@ CivicFix-AI is a full-stack AI-powered civic issue reporting platform designed t
 
 ## 📸 Screenshots
 
-Screenshots of the application will be added here.
+### 🏠 Home Page
+
+![CivicFix-AI Home Page](Screenshot%202026-10-03%20201827.png)
+
+### 📊 Dashboard
+
+![CivicFix-AI Dashboard](Screenshot%202026-10-03%20202012.png)
 
 ---
 
