@@ -10,20 +10,6 @@ CivicFix-AI is a full-stack AI-powered civic issue reporting platform designed t
 
 ---
 
-## ✨ Features
-
-- 🤖 AI-powered issue categorization
-- 🚨 Severity and urgency analysis
-- 🏢 Automatic department assignment
-- 🗺️ Interactive map-based issue reporting
-- 📍 Location selection using maps
-- 📊 Dashboard with issue statistics
-- 📈 Impact score analysis
-- 🔄 Issue status tracking
-- 🌐 Full-stack frontend and backend architecture
-
----
-
 ## 🛠️ Tech Stack
 
 ### Frontend
@@ -68,32 +54,35 @@ CivicFix-AI is a full-stack AI-powered civic issue reporting platform designed t
 
 ---
 
+## ✨ Features
+
+* 📝 Civic issue reporting with image uploads
+* 🤖 Issue categorization with fallback analysis when the AI API is unavailable
+* 🚨 Severity and urgency estimation
+* 🏢 Recommended department assignment
+* 🗺️ Interactive map-based issue reporting
+* 📍 Location selection using maps
+* 📊 Dashboard with issue statistics
+* 📈 Issue impact scoring
+* 🔄 Issue status tracking (Pending, In Progress, Resolved)
+* 🏛️ Government Action Hub with relevant complaint portal links
+* ✍️ AI Complaint Assistant for generating complaint drafts
+* 📋 Copy generated complaints for submission
+
+**Current AI limitation:** Image uploads work, but AI image analysis is temporarily unavailable because the OpenAI API account has no remaining credits. Text analysis uses fallback rules when the API is unavailable.
+
+---
+
 ## ✨ Key Highlights
 
-- Uses AI to analyze reported civic issues
-- Assigns issue categories and responsible departments
-- Evaluates severity, urgency, and impact
-- Allows users to select locations through an interactive map
-- Provides a dashboard for monitoring reported issues
-- Uses a React frontend with an Express.js and Node.js backend
-- Stores application data using MongoDB
-
----
-
-## 🏆 Hackathon
-
-CivicFix-AI was built and submitted as part of **Avalon OpenHack 2026**.
-
-The project provided hands-on experience with:
-
-- Full-stack web development
-- AI API integration
-- REST API development
-- MongoDB database integration
-- Interactive maps
-- Building and deploying a real-world web application
-
----
+* Helps users report and track local civic issues
+* Recommends issue categories and responsible departments
+* Estimates severity, urgency, and impact
+* Supports image evidence and interactive map locations
+* Provides government complaint portal links; users submit complaints themselves
+* Generates complaint drafts that users can copy and submit
+* Uses React, Node.js, Express, MongoDB, and Mongoose
+* Includes fallback analysis to keep basic reporting functional when the AI API is unavailable
 
 ## 👩‍💻 Author
 
