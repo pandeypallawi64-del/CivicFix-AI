@@ -62,8 +62,8 @@ const actionLinks = {
       console.log("Report ID:", id);
       console.log("New status:", newStatus);
 
-      const response = await fetch(
-        "http://localhost:5000/api/reports/update-status",
+     const response = await fetch(
+  "https://civicfix-ai-backend-xcjg.onrender.com/api/reports/update-status",
         {
           method: "POST",
           headers: {
@@ -110,7 +110,7 @@ const actionLinks = {
 
   try {
     const response = await fetch(
-      `http://localhost:5000/api/reports/${id}`,
+  `https://civicfix-ai-backend-xcjg.onrender.com/api/reports/${id}`,
       {
         method: "DELETE",
       }
@@ -173,8 +173,8 @@ const generateComplaint = async (report) => {
       [report._id]: true,
     }));
 
-    const response = await fetch(
-      "http://localhost:5000/api/reports/generate-complaint",
+   const response = await fetch(
+  "https://civicfix-ai-backend-xcjg.onrender.com/api/reports/generate-complaint",
       {
         method: "POST",
         headers: {
@@ -244,7 +244,7 @@ const generateComplaint = async (report) => {
 
   
 useEffect(() => {
-  fetch("http://localhost:5000/api/reports")
+  fetch("https://civicfix-ai-backend-xcjg.onrender.com/api/reports")
     .then((response) => {
       if (!response.ok) {
         throw new Error("Failed to fetch reports");

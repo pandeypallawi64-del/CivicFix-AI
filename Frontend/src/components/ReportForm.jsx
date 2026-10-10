@@ -246,7 +246,7 @@ function ReportForm({ onClose }) {
     }
 
     const response = await fetch(
-  "http://localhost:5000/api/reports",
+  "https://civicfix-ai-backend-xcjg.onrender.com/api/reports",
       {
         method: "POST",
         body: formData,
