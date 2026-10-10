@@ -19,6 +19,45 @@ const reportSchema = new mongoose.Schema({
     type: Number
   },
 
+  // Uploaded evidence image
+  imageUrl: {
+    type: String,
+    default: ""
+  },
+
+  imagePublicId: {
+    type: String,
+    default: ""
+  },
+
+  
+  // AI image analysis results
+  imageCategory: {
+    type: String,
+    default: ""
+  },
+
+  imageDescription: {
+    type: String,
+    default: ""
+  },
+
+  imageMatchesDescription: {
+    type: Boolean,
+    default: null
+  },
+
+  imageConfidence: {
+    type: Number,
+    default: 0
+  },
+
+  
+imageAnalysisStatus: {
+  type: String,
+  enum: ["not_requested", "completed", "unavailable"],
+  default: "not_requested"
+},
   aiCategory: String,
 
   aiSeverity: String,

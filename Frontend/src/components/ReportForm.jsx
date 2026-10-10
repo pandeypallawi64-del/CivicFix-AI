@@ -118,6 +118,8 @@ function ReportForm({ onClose }) {
   const [category, setCategory] = useState("");
   const [severity, setSeverity] = useState("");
   const [location, setLocation] = useState("");
+  const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
 
   const [coordinates, setCoordinates] = useState(null);
 
@@ -181,90 +183,100 @@ function ReportForm({ onClose }) {
     }
   };
 
+  const handleImageChange = (e) => {
+  const file = e.target.files[0];
+
+  if (!file) return;
+
+  // Allow only images
+  if (!file.type.startsWith("image/")) {
+    setError("Please select a valid image file.");
+    return;
+  }
+
+  // Maximum 5 MB
+  if (file.size > 5 * 1024 * 1024) {
+    setError("Image size must be less than 5 MB.");
+    return;
+  }
+
+  setImage(file);
+  setImagePreview(URL.createObjectURL(file));
+  setError("");
+};
+
   // ------------------------------------------------
   // Submit report
   // ------------------------------------------------
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (
-      !description ||
-      !category ||
-      !severity ||
-      !location
-    ) {
-      setError("Please fill in all fields.");
-      return;
+  if (
+    !description ||
+    !category ||
+    !severity ||
+    !location
+  ) {
+    setError("Please fill in all fields.");
+    return;
+  }
+
+  if (!coordinates) {
+    setError("Please select the issue location on the map.");
+    return;
+  }
+
+  setLoading(true);
+  setSuccess(false);
+  setError("");
+
+  try {
+    const formData = new FormData();
+
+    formData.append("description", description);
+    formData.append("category", category);
+    formData.append("severity", severity);
+    formData.append("location", location);
+    formData.append("latitude", coordinates.lat);
+    formData.append("longitude", coordinates.lng);
+
+    if (image) {
+      formData.append("image", image);
     }
 
-    if (!coordinates) {
-      setError(
-        "Please select the issue location on the map."
-      );
-      return;
-    }
-
-    setLoading(true);
-    setSuccess(false);
-    setError("");
-
-    const report = {
-      description,
-      category,
-      severity,
-      location,
-      latitude: coordinates.lat,
-      longitude: coordinates.lng,
-    };
-
-    console.log("Submitting report:", report);
-
-    try {
-      const response = await fetch(
-        "https://civicfix-ai-backend-xcjg.onrender.com/api/reports",
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type": "application/json",
-          },
-
-          body: JSON.stringify(report),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to submit report");
+    const response = await fetch(
+  "http://localhost:5000/api/reports",
+      {
+        method: "POST",
+        body: formData,
       }
+    );
 
-      const data = await response.json();
-
-      console.log(
-        "Report submitted successfully:",
-        data
-      );
-
-      setSuccess(true);
-
-      // Close report form after successful submission
-      setTimeout(() => {
-        if (onClose) {
-          onClose();
-        }
-      }, 1000);
-
-    } catch (error) {
-      console.log("Submission error:", error);
-
-      setError(
-        "Something went wrong. Please try again."
-      );
-    } finally {
-      setLoading(false);
+    if (!response.ok) {
+      throw new Error("Failed to submit report");
     }
-  };
 
+    const data = await response.json();
+
+    console.log("Report submitted successfully:", data);
+
+    setSuccess(true);
+
+    // Close report form after successful submission
+    setTimeout(() => {
+      if (onClose) {
+        onClose();
+      }
+    }, 1000);
+  } catch (error) {
+    console.log("Submission error:", error);
+
+    setError("Something went wrong. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
   // ------------------------------------------------
   // UI
   // ------------------------------------------------
@@ -456,6 +468,53 @@ function ReportForm({ onClose }) {
           </strong>
         </p>
       )}
+
+      {/* Evidence Image */}
+
+<label
+  style={{
+    display: "block",
+    marginTop: "20px",
+  }}
+>
+  📸 Upload Evidence
+</label>
+
+<input
+  type="file"
+  accept="image/*"
+  onChange={handleImageChange}
+/>
+
+{imagePreview && (
+  <div style={{ marginTop: "15px" }}>
+    <img
+      src={imagePreview}
+      alt="Issue evidence preview"
+      style={{
+        width: "100%",
+        maxWidth: "400px",
+        maxHeight: "300px",
+        objectFit: "cover",
+        borderRadius: "10px",
+        display: "block",
+      }}
+    />
+
+    <button
+      type="button"
+      onClick={() => {
+        setImage(null);
+        setImagePreview("");
+      }}
+      style={{
+        marginTop: "10px",
+      }}
+    >
+      Remove Image
+    </button>
+  </div>
+)}
 
       {/* Submit */}
 

@@ -10,6 +10,48 @@ import "leaflet/dist/leaflet.css";
 
 function Dashboard() {
   const [reports, setReports] = useState([]);
+  const [statusFilter, setStatusFilter] = useState("All");
+  
+const [complaints, setComplaints] = useState({});
+const [complaintLoading, setComplaintLoading] = useState({});
+const [copySuccess, setCopySuccess] = useState({});
+  // ===============================
+// GOVERNMENT ACTION LINKS
+// ===============================
+
+
+const actionLinks = {
+  garbage: {
+    title: "Municipal Sanitation Grievance",
+    description: "Report garbage accumulation and sanitation problems to your municipal authority.",
+    url: "https://municipalservices.jharkhand.gov.in/grievance_new/login"
+  },
+  road: {
+    title: "Road Damage Grievance",
+    description: "Report potholes and damaged roads to the relevant road authority.",
+    url: "https://municipalservices.jharkhand.gov.in/grievance_new/login"
+  },
+  streetlight: {
+    title: "Streetlight Grievance",
+    description: "Report faulty streetlights to your municipal authority.",
+    url: "https://municipalservices.jharkhand.gov.in/grievance_new/login"
+  },
+  water: {
+    title: "Water and Drainage Grievance",
+    description: "Report water supply, leakage, drainage, or waterlogging problems.",
+    url: "https://municipalservices.jharkhand.gov.in/grievance_new/login"
+  },
+  traffic: {
+    title: "Traffic or Public Grievance",
+    description: "Use the government grievance portal to identify the appropriate authority.",
+    url: "https://pgportal.gov.in/Home/LodgeGrievance"
+  },
+  other: {
+    title: "General Government Grievance",
+    description: "Find the appropriate government authority for this issue.",
+    url: "https://pgportal.gov.in/Home/LodgeGrievance"
+  }
+};
 
   // ===============================
   // UPDATE REPORT STATUS
@@ -21,7 +63,7 @@ function Dashboard() {
       console.log("New status:", newStatus);
 
       const response = await fetch(
-        "https://civicfix-ai-backend-xcjg.onrender.com/api/reports/update-status",
+        "http://localhost:5000/api/reports/update-status",
         {
           method: "POST",
           headers: {
@@ -57,6 +99,122 @@ function Dashboard() {
     }
   };
 
+  const deleteReport = async (id) => {
+  const confirmDelete = window.confirm(
+    "Are you sure you want to delete this report?"
+  );
+
+  if (!confirmDelete) {
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `http://localhost:5000/api/reports/${id}`,
+      {
+        method: "DELETE",
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.message || "Failed to delete report"
+      );
+    }
+
+    // Remove deleted report from Dashboard immediately
+    setReports((previousReports) =>
+      previousReports.filter(
+        (report) => report._id !== id
+      )
+    );
+
+    console.log("Report deleted successfully!");
+
+  } catch (error) {
+    console.log(
+      "Delete error:",
+      error.message
+    );
+
+    alert(
+      "Failed to delete report. Please try again."
+    );
+  }
+};
+
+
+const copyComplaint = async (reportId, complaint) => {
+  const textToCopy = `${complaint.subject}\n\n${complaint.complaint}`;
+
+  try {
+    await navigator.clipboard.writeText(textToCopy);
+
+    setCopySuccess((previous) => ({
+      ...previous,
+      [reportId]: "Complaint copied successfully!"
+    }));
+  } catch (error) {
+    console.error("Clipboard copy failed:", error);
+
+    setCopySuccess((previous) => ({
+      ...previous,
+      [reportId]: "Copy failed. Please select and copy the text manually."
+    }));
+  }
+};
+
+const generateComplaint = async (report) => {
+  try {
+    setComplaintLoading((previous) => ({
+      ...previous,
+      [report._id]: true,
+    }));
+
+    const response = await fetch(
+      "http://localhost:5000/api/reports/generate-complaint",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          description: report.description,
+          category: report.aiCategory || report.category,
+          severity: report.aiSeverity || report.severity,
+          urgency: report.urgency,
+          department: report.department,
+          location: report.location,
+          reason: report.reason,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.message || "Could not generate complaint"
+      );
+    }
+
+    setComplaints((previous) => ({
+      ...previous,
+      [report._id]: data,
+    }));
+  } catch (error) {
+    console.error("Complaint generation error:", error);
+    alert("Could not generate the complaint. Please try again.");
+  } finally {
+    setComplaintLoading((previous) => ({
+      ...previous,
+      [report._id]: false,
+    }));
+  }
+};
+
   // ===============================
   // STATISTICS
   // ===============================
@@ -84,19 +242,25 @@ function Dashboard() {
   // FETCH REPORTS
   // ===============================
 
-  useEffect(() => {
-    fetch("https://civicfix-ai-backend-xcjg.onrender.com/api/reports")
-      .then((response) => response.json())
-      .then((data) => {
-        setReports(data);
-      })
-      .catch((error) => {
-        console.log(
-          "Error fetching reports:",
-          error
-        );
-      });
-  }, []);
+  
+useEffect(() => {
+  fetch("http://localhost:5000/api/reports")
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Failed to fetch reports");
+      }
+      return response.json();
+    })
+    .then((data) => {
+      setReports(
+        Array.isArray(data) ? data : data.reports || []
+      );
+    })
+    .catch((error) => {
+      console.log("Error fetching reports:", error);
+      setReports([]);
+    });
+}, []);
 
   // ===============================
   // DASHBOARD UI
@@ -203,12 +367,47 @@ function Dashboard() {
       {/* ===============================
           REPORTS
       =============================== */}
+      <div className="filter-section">
+  <label htmlFor="statusFilter">Filter by Status:</label>
 
-      {reports.map((report) => (
-        <div
-          className="report-card"
-          key={report._id}
-        >
+  <select
+    id="statusFilter"
+    value={statusFilter}
+    onChange={(e) => setStatusFilter(e.target.value)}
+  >
+    <option value="All">All Statuses</option>
+    <option value="Pending">Pending</option>
+    <option value="In Progress">In Progress</option>
+    <option value="Resolved">Resolved</option>
+  </select>
+</div>
+  
+      {reports
+        .filter(
+          (report) =>
+            statusFilter === "All" ||
+            (report.status || "Pending") === statusFilter
+        )
+        .map((report) => (
+          <div className="report-card" key={report._id}>
+            {/* EVIDENCE IMAGE */}
+
+{report.imageUrl && (
+  <div style={{ marginBottom: "15px" }}>
+    <img
+      src={report.imageUrl}
+      alt="Civic issue evidence"
+      style={{
+        width: "100%",
+        maxWidth: "500px",
+        maxHeight: "350px",
+        objectFit: "cover",
+        borderRadius: "12px",
+        display: "block",
+      }}
+    />
+  </div>
+)}
           {/* DESCRIPTION */}
 
           <h3>{report.description}</h3>
@@ -251,6 +450,87 @@ function Dashboard() {
             {report.department || "N/A"}
           </p>
 
+          
+{/* GOVERNMENT ACTION HUB */}
+{(() => {
+  const action =
+    actionLinks[report.aiCategory || report.category] ||
+    actionLinks.other;
+
+  return (
+    <div className="government-action-card">
+      <h4>🏛️ Government Action Hub</h4>
+
+      <h5>{action.title}</h5>
+      <p>{action.description}</p>
+
+      <a
+        href={action.url}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Open Government Portal ↗
+      </a>
+
+      <p className="government-action-note">
+        Review your complaint and submit it on the official
+        portal. CivicFix-AI does not submit it automatically.
+      </p>
+    </div>
+  );
+})()}
+
+          
+
+{/* AI COMPLAINT GENERATOR */}
+
+<div className="complaint-assistant">
+  <h4>🤖 AI Complaint Assistant</h4>
+
+  <button
+    onClick={() => generateComplaint(report)}
+    disabled={!!complaintLoading[report._id]}
+  >
+    {complaintLoading[report._id]
+      ? "Generating..."
+      : complaints[report._id]
+      ? "Regenerate Complaint"
+      : "Generate Complaint"}
+  </button>
+
+  {complaints[report._id] && (
+    <div>
+      <h5>{complaints[report._id].subject}</h5>
+
+      <textarea
+        readOnly
+        value={complaints[report._id].complaint}
+        rows={8}
+        style={{
+          width: "100%",
+          boxSizing: "border-box",
+          padding: "12px",
+          marginBottom: "10px",
+        }}
+      />
+
+      
+<button
+  onClick={() => copyComplaint(report._id, complaints[report._id])}
+>
+  📋 Copy Complaint
+</button>
+
+{copySuccess[report._id] && (
+  <p role="status">
+    {copySuccess[report._id]}
+  </p>
+)}
+    </div>
+  )}
+</div>
+
+
           {/* STATUS */}
 
           <p>
@@ -271,40 +551,48 @@ function Dashboard() {
               STATUS BUTTONS
           =============================== */}
 
-          <div>
-            <button
-              onClick={() =>
-                updateStatus(
-                  report._id,
-                  "Pending"
-                )
-              }
-            >
-              Pending
-            </button>
+        <div>
+  <button
+    onClick={() =>
+      updateStatus(
+        report._id,
+        "Pending"
+      )
+    }
+  >
+    Pending
+  </button>
 
-            <button
-              onClick={() =>
-                updateStatus(
-                  report._id,
-                  "In Progress"
-                )
-              }
-            >
-              In Progress
-            </button>
+  <button
+    onClick={() =>
+      updateStatus(
+        report._id,
+        "In Progress"
+      )
+    }
+  >
+    In Progress
+  </button>
 
-            <button
-              onClick={() =>
-                updateStatus(
-                  report._id,
-                  "Resolved"
-                )
-              }
-            >
-              Resolved
-            </button>
-          </div>
+  <button
+    onClick={() =>
+      updateStatus(
+        report._id,
+        "Resolved"
+      )
+    }
+  >
+    Resolved
+  </button>
+
+  <button
+    onClick={() =>
+      deleteReport(report._id)
+    }
+  >
+    Delete
+  </button>
+</div>
 
           {/* ===============================
               IMPACT SCORE
